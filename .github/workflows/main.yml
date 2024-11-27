@@ -1,0 +1,38 @@
+name: Build and Deploy Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    environment:
+      REPO_URL: 'https://github.com/ramakanthdevidi/firstproject.git'
+      BRANCH: 'main'
+      IMAGE_NAME: 'firstproject-image'
+      CONTAINER_NAME: 'firstproject-container'
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Clone Repository
+      run: |
+        git clone --branch ${{ env.BRANCH }} ${{ env.REPO_URL }} .
+
+    - name: Maven Build
+      run: mvn clean install
+
+    - name: Build Docker Image
+      run: |
+        sudo chmod 666 /var/run/docker.sock
+        docker build -t ${{ env.IMAGE_NAME }} .
+
+    - name: Run Docker Container
+      run: |
+        docker rm -f ${{ env.CONTAINER_NAME }} || true
+        docker run -d --name ${{ env.CONTAINER_NAME }} ${{ env.IMAGE_NAME }}
+
